@@ -1,3 +1,5 @@
+![Screenshot of example app](docs/thumbnail.png)
+
 # skia-canvas Test App
 
 A mini example of using [skia-canvas](https://github.com/samizdatco/skia-canvas).
