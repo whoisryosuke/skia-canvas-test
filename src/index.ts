@@ -17,15 +17,21 @@ win.on("draw", (e) => {
   ctx.fill();
 });
 
-win.on('mousemove', ({button, x, y, target}) => {
+win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, ...rest}) => {
   let ctx = target.canvas.getContext("2d");
   // const { canvas, ctx } = win;
-  if (button == 0){ // a left click
+  if (!shiftKey && button == 0){ // a left click
     ctx.fillStyle = `rgb(${Math.floor(255 * Math.random())},50,0)`
     ctx.beginPath()
     ctx.arc(x, y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
     ctx.fill()
-    console.log('left click!')
+    console.log('left click!', {target, ...rest})
+  }
+
+  // Shift and left click!
+  if(shiftKey && button == 0) {
+    console.log('shift left click!')
+
   }
 
   if (button == 1){ // a left click
