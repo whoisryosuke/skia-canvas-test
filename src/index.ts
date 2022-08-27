@@ -17,7 +17,7 @@ win.on("draw", (e) => {
   ctx.fill();
 });
 
-win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, ...rest}) => {
+win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, pageX, pageY, ...rest}) => {
   let ctx = target.canvas.getContext("2d");
   // const { canvas, ctx } = win;
   if (!shiftKey && button == 0){ // a left click
@@ -25,7 +25,7 @@ win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, 
     ctx.beginPath()
     ctx.arc(x, y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
     ctx.fill()
-    console.log('left click!', {target, ...rest})
+    console.log('left click!', pageX, pageY)
   }
 
   // Shift and left click!
