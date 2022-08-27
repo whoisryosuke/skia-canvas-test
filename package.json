@@ -1,12 +1,21 @@
 {
   "name": "skia-canvas-test",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.ts",
   "license": "MIT",
   "dependencies": {
-    "skia-canvas": "^1.0.0"
+    "skia-canvas": "^1.0.0",
+    "zustand": "^4.1.1"
   },
   "scripts": {
-    "start": "node src/index.js"
+    "start": "ts-node src/index.ts",
+    "lint:ts": "tsc src/index.ts --noEmit",
+    "build": "tsc src/index.ts"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^18.7.13",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
   }
 }
