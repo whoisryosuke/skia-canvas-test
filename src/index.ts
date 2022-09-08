@@ -15,6 +15,14 @@ win.on("draw", (e) => {
   ctx.arc(150, 150, 10, 0, 2 * Math.PI);
   ctx.stroke();
   ctx.fill();
+
+  const { bears } = store.getState()
+  new Array(bears).fill(0).map((_, index) => {
+    ctx.beginPath();
+    ctx.arc(10 * index, 10 * index, 10, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+  })
 });
 
 win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, pageX, pageY, ...rest}) => {
@@ -26,6 +34,11 @@ win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, 
     ctx.arc(x, y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
     ctx.fill()
     console.log('left click!', pageX, pageY)
+
+    const { bears, increase } = store.getState()
+    increase(1);
+
+    console.log('bears', bears)
   }
 
   // Shift and left click!
