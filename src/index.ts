@@ -1,7 +1,35 @@
-import { Window } from "skia-canvas";
+import { CanvasRenderingContext2D, Window } from "skia-canvas";
 import store from "./store";
 
-let win = new Window(300, 300,{background:'rgba(16, 16, 16, 0.35)'});
+class Button { 
+  x: number = 0;
+  y: number = 0;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  render(ctx: CanvasRenderingContext2D) {
+    // ctx.beginPath();
+    // ctx.arc(150, 150, 10, 0, 2 * Math.PI);
+    // ctx.stroke();
+    // ctx.fill();
+    
+    ctx.beginPath()
+    ctx.arc(this.x, this.y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
+    ctx.fill()
+  }
+  onClick() {
+    console.log('button clicked')
+  }
+}
+
+const sceneGraph = {
+  children: [new Button(0,0)],
+}
+
+let win = new Window(500, 500,{background:'rgba(16, 16, 16, 0.35)'});
 win.title = "Canvas Window";
 win.on("draw", (e) => {
   let ctx = e.target.canvas.getContext("2d");
@@ -11,10 +39,13 @@ win.on("draw", (e) => {
   ctx.arc(150, 150, 50, 0, 2 * Math.PI);
   ctx.stroke();
 
-  ctx.beginPath();
-  ctx.arc(150, 150, 10, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.fill();
+  //@ts-ignore
+  sceneGraph.children.map((child) => child.render(ctx))
+
+  // ctx.beginPath();
+  // ctx.arc(150, 150, 10, 0, 2 * Math.PI);
+  // ctx.stroke();
+  // ctx.fill();
 
   const { bears } = store.getState()
   new Array(bears).fill(0).map((_, index) => {
@@ -35,10 +66,12 @@ win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, 
     ctx.fill()
     console.log('left click!', pageX, pageY)
 
-    const { bears, increase } = store.getState()
-    increase(1);
+    // const { bears, increase } = store.getState()
+    // increase(1);
 
-    console.log('bears', bears)
+    // console.log('bears', bears)
+
+    sceneGraph.children = [...sceneGraph.children, new Button(x, y)]
   }
 
   // Shift and left click!
