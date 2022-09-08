@@ -1,24 +1,48 @@
 import { CanvasRenderingContext2D, Window } from "skia-canvas";
 import store from "./store";
 
-class Button { 
-  x: number = 0;
-  y: number = 0;
+class SkiaElement {
+  visible = true;
+  destroyFlag = false;
+
+  /**
+   * Toggle the visibility of this element
+   * @param visibility Visibility of element
+   */
+  setVisible(visibility: boolean) {
+    this.visible = visibility;
+  }
+
+  /**
+   * Marks the element for "destruction"
+   * This means this class will be removed from scene graph next frame tick
+   */
+  destroy() {
+    this.destroyFlag = true;
+  }
+}
+
+class Button extends SkiaElement { 
+  x = 0;
+  y = 0;
+  lifecycle = 0;
 
   constructor(x: number, y: number) {
+    super();
     this.x = x;
     this.y = y;
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    // ctx.beginPath();
-    // ctx.arc(150, 150, 10, 0, 2 * Math.PI);
-    // ctx.stroke();
-    // ctx.fill();
-    
     ctx.beginPath()
     ctx.arc(this.x, this.y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
     ctx.fill()
+
+    this.lifecycle += 1;
+    if(this.lifecycle > 30) {
+      console.log('[BUTTON] Button lifecycle ended')
+      this.destroy();
+    }
   }
   onClick() {
     console.log('button clicked')
@@ -33,27 +57,22 @@ let win = new Window(500, 500,{background:'rgba(16, 16, 16, 0.35)'});
 win.title = "Canvas Window";
 win.on("draw", (e) => {
   let ctx = e.target.canvas.getContext("2d");
-  // console.log("test", e.target);
-  ctx.lineWidth = 25 + 25 * Math.cos(e.frame / 10);
-  ctx.beginPath();
-  ctx.arc(150, 150, 50, 0, 2 * Math.PI);
-  ctx.stroke();
 
+  // Destroy any elements flagged
+  sceneGraph.children = sceneGraph.children.filter((child) => !child.destroyFlag)
+
+  // Render all elements
   //@ts-ignore
   sceneGraph.children.map((child) => child.render(ctx))
 
-  // ctx.beginPath();
-  // ctx.arc(150, 150, 10, 0, 2 * Math.PI);
-  // ctx.stroke();
-  // ctx.fill();
-
-  const { bears } = store.getState()
-  new Array(bears).fill(0).map((_, index) => {
-    ctx.beginPath();
-    ctx.arc(10 * index, 10 * index, 10, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.fill();
-  })
+  // We can also use Zustand store to manage state directly
+  // const { bears } = store.getState()
+  // new Array(bears).fill(0).map((_, index) => {
+  //   ctx.beginPath();
+  //   ctx.arc(10 * index, 10 * index, 10, 0, 2 * Math.PI);
+  //   ctx.stroke();
+  //   ctx.fill();
+  // })
 });
 
 win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, pageX, pageY, ...rest}) => {
@@ -66,11 +85,12 @@ win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, 
     ctx.fill()
     console.log('left click!', pageX, pageY)
 
+    // Zustand example
     // const { bears, increase } = store.getState()
     // increase(1);
-
     // console.log('bears', bears)
 
+    // When user clicks, add new element where user clicked
     sceneGraph.children = [...sceneGraph.children, new Button(x, y)]
   }
 
