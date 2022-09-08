@@ -102,6 +102,11 @@ class Button extends SkiaElement {
       this.destroy();
     }
   }
+
+  componentWillUnmount(): void {
+      console.log('[BUTTON] component will unmount')
+  }
+
   onClick() {
     console.log('button clicked')
   }
