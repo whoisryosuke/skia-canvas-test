@@ -1,5 +1,8 @@
-import { CanvasRenderingContext2D, Window } from "skia-canvas";
+import { Canvas, CanvasRenderingContext2D, Window } from "skia-canvas";
 import store from "./store";
+
+// Start at 1 cause black/blank canvas equates to 0
+let componentCount = 1;
 
 abstract class SkiaComponent {
 
@@ -28,6 +31,15 @@ abstract class SkiaComponent {
 }
 
 class SkiaElement extends SkiaComponent {
+  id: number;
+
+  constructor() {
+    super()
+    this.id = componentCount;
+    // Increment global component counter
+    componentCount += 1
+  }
+
   /**
    * Has element been created and rendered at least once?
    */
@@ -74,6 +86,11 @@ const COLORS = [
   'orange', 'yellow', 'green', 'skyblue', 'purple', 'teal', 'magenta'
 ]
 
+const generateHitboxColor = (id: number) => {
+  // Number will go from 1-16k (255x255x255)
+  return `rgba(${id}, 0, 0, 1)`
+}
+
 class Button extends SkiaElement { 
   x = 0;
   y = 0;
@@ -85,22 +102,38 @@ class Button extends SkiaElement {
     this.y = y;
   }
 
-  render(ctx: CanvasRenderingContext2D) {
+  drawArc(ctx: CanvasRenderingContext2D, color?: string) {
     
     ctx.beginPath()
     // const colorKey = Math.round(Math.random() * COLORS.length -1);
     const colorKey = this.x % COLORS.length - 1;
-    ctx.fillStyle = COLORS[colorKey]
+    ctx.fillStyle = color ?? COLORS[colorKey]
     // ctx.arc(this.x, this.y, 10 + 30 * Math.random(), 0, 2 * Math.PI)
     const random = this.x % 3;
     ctx.arc(this.x, this.y, 10 + 30 * random, 0, 2 * Math.PI)
     ctx.fill()
+  }
 
-    this.lifecycle += 1;
-    if(this.lifecycle > 30) {
-      console.log('[BUTTON] Button lifecycle ended')
-      this.destroy();
-    }
+  render(ctx: CanvasRenderingContext2D) {
+    
+    this.drawArc(ctx);
+
+    // this.lifecycle += 1;
+    // if(this.lifecycle > 30) {
+    //   console.log('[BUTTON] Button lifecycle ended')
+    //   this.destroy();
+    // }
+  }
+
+  renderHitbox(ctx: CanvasRenderingContext2D) {
+    
+    this.drawArc(ctx, generateHitboxColor(this.id));
+
+    // this.lifecycle += 1;
+    // if(this.lifecycle > 30) {
+    //   console.log('[BUTTON] Button lifecycle ended')
+    //   this.destroy();
+    // }
   }
 
   componentWillUnmount(): void {
@@ -108,7 +141,7 @@ class Button extends SkiaElement {
   }
 
   onClick() {
-    console.log('button clicked')
+    console.log('[BUTTON] clicked')
   }
 }
 
@@ -116,10 +149,21 @@ const sceneGraph = {
   children: [new Button(0,0)],
 }
 
-let win = new Window(800, 800,{background:'rgba(16, 16, 16, 0.35)'});
+const WINDOW_SIZE = {
+  width: 800,
+  height: 800,
+}
+let win = new Window(WINDOW_SIZE.width, WINDOW_SIZE.height,{background:'rgba(16, 16, 16, 0.35)'});
 win.title = "Canvas Window";
+win.on("setup", () => {
+  const { setHitboxCanvas } = store.getState();
+  const newCanvas = new Canvas(WINDOW_SIZE.width, WINDOW_SIZE.height);
+  setHitboxCanvas(newCanvas)
+})
 win.on("draw", (e) => {
   let ctx = e.target.canvas.getContext("2d");
+  const {hitboxCanvas} = store.getState()
+  const hitboxContext = hitboxCanvas?.getContext("2d"); 
 
   // Destroy any elements flagged
   sceneGraph.children = sceneGraph.children.filter((child) => !child.destroyFlag)
@@ -130,6 +174,9 @@ win.on("draw", (e) => {
     if(!child.visible) return;
     child.render(ctx);
     child.afterRender();
+
+    // Render hitbox
+    if(hitboxContext) child.renderHitbox(hitboxContext);
   })
 
   // We can also use Zustand store to manage state directly
@@ -142,8 +189,10 @@ win.on("draw", (e) => {
   // })
 });
 
-win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, pageX, pageY, ...rest}) => {
+win.on('mousedown', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, pageX, pageY, ...rest}) => {
   let ctx = target.canvas.getContext("2d");
+  const {hitboxCanvas} = store.getState()
+  const hitboxContext = hitboxCanvas?.getContext("2d"); 
   // const { canvas, ctx } = win;
 
   // Left click
@@ -155,8 +204,24 @@ win.on('mousemove', ({button, x, y, target, ctrlKey, altKey, shiftKey, metaKey, 
     // increase(1);
     // console.log('bears', bears)
 
-    // When user clicks, add new element where user clicked
-    sceneGraph.children = [...sceneGraph.children, new Button(x, y)]
+    // Get color
+    if(hitboxContext){
+      // Grab RGB color data from "offscreen" hitbox canvas 
+      var [r,g,b] = hitboxContext.getImageData(x, y, 1, 1).data; 
+      console.log('hitbox color', {r,g,b})
+      
+      // Got a color? Find the element and fire it's onClick event
+      if(r > 0) {
+        const focusedElement = sceneGraph.children.find((child) => child.id === r);
+        if(focusedElement) {
+          focusedElement.onClick();
+        }
+      } else {
+        // When user clicks blank canvas, add new element where user clicked
+        sceneGraph.children = [...sceneGraph.children, new Button(x, y)]
+      }
+    }
+
   }
 
   // Shift and left click!

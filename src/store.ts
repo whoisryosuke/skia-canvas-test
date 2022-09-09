@@ -1,12 +1,13 @@
+import { Canvas } from "skia-canvas/lib";
 import create from "zustand/vanilla";
 
 interface BearState {
-  bears: number
-  increase: (by: number) => void
+  hitboxCanvas: Canvas | null;
+  setHitboxCanvas: (hitboxCanvas: Canvas) => void
 }
 const store = create<BearState>((set) => ({
-  bears: 0,
-  increase: (by) => set((state) => ({ bears: state.bears + by })),
+  hitboxCanvas: null,
+  setHitboxCanvas: (hitboxCanvas) => set((state) => ({ hitboxCanvas })),
 }));
 
 export default store;
